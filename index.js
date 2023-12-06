@@ -9,6 +9,7 @@ const requestLogger = (request, response, next) => {
     next()
 }
 
+app.use(express.static('dist'))
 // Express JSON parser used to post new entries (middleware)
 app.use(express.json())
 app.use(requestLogger)
