@@ -8,3 +8,6 @@ Content-Type: application/json
     "content": "Postman is cool no?",
     "important": true
 }
+
+###
+DELETE http://localhost:3001/api/notes/6575ba1be412d7f0a63aba14
