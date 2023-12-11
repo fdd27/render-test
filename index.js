@@ -49,13 +49,11 @@ app.delete('/api/notes/:id', (request, response) => {
 })
 
 // Post
-app.post('/api/notes', (request, response) => {
+app.post('/api/notes', (request, response, next) => {
     const body = request.body
 
-    if (!body.content) {
-        return response.status(400).json({
-            error: 'content missing'
-        })
+    if (body.content === undefined) {
+        return response.status(400).json({ error: 'content missing' })
     }
 
     const note = new Note({
@@ -63,22 +61,23 @@ app.post('/api/notes', (request, response) => {
         important: body.important || false,
     })
 
-    note.save().then(savedNote => {
-        response.json(savedNote)
-    })
+    note.save()
+        .then(savedNote => {
+            response.json(savedNote)
+        })
+        .catch(error => next(error))
 })
 
 // Put
 app.put('/api/notes/:id', (req, res) => {
-    const body = req.body
-
-    const note = {
-        content: body.content,
-        important: body.important,
-    }
+    const { content, important } = req.body
 
     // new: true returns the new updated document, otherwise you get the previous one by default
-    Note.findByIdAndUpdate(req.params.id, note, { new: true })
+    Note.findByIdAndUpdate(
+        req.params.id,
+        { content, important },
+        { new: true, runValidators: true, context: 'query' }
+    )
         .then(updatedNote => res.json(updatedNote))
         .catch(error => next(error))
 })
@@ -93,6 +92,9 @@ const errorHandler = (error, req, res, next) => {
 
     if (error.name === 'CastError') {
         return res.status(400).send({ error: 'malformatted id' })
+    }
+    else if (error.name === 'ValidationError') {
+        return res.status(400).send({ error: error.message })
     }
 
     next(error)
